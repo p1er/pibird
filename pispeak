@@ -1,0 +1,21 @@
+#!/bin/sh
+
+FREQ=104.4
+#Put sound file in tmpfs
+WAVFILE=/run/espeak.tmp
+PRG=`readlink -f "$0"`
+BASEDIR=`dirname "$PRG"`
+WORDS=""$@""
+WPM=140
+PITCH=99
+#LANG=spanish
+LANG=en+m2
+
+#Receive input text from stdin if the first argument is '-'
+if [ "x$1" = "x-" ]; then 
+   OPTS="--stdin"
+fi
+
+[ -f "$WAVFILE" ] && sudo rm "$WAVFILE"
+sudo espeak $OPTS -m -v $LANG -p $PITCH -s $WPM -w "$WAVFILE" "$WORDS" 
+sudo $BASEDIR/pifm "$WAVFILE" $FREQ 
