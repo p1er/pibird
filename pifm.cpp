@@ -555,9 +555,13 @@ void playWav(char* filename, float samplerate, bool stereo)
 }
 
 void unSetupDMA(){
-    printf("exiting\n");
+    printf("Resetting DMA and clock.\n");
     struct DMAregs* DMA0 = (struct DMAregs*)&(ACCESS(DMABASE));
     DMA0->CS =1<<31;  // reset dma controller
+   
+    //Turn off clock 
+    struct GPCTL setupword = {6/*SRC*/, 0, 0, 0, 0, 1,0x5a};
+    ACCESS(CM_GP0CTL) = *((int*)&setupword);
     
 }
 
