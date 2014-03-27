@@ -1,21 +1,75 @@
 #!/bin/sh
 
-FREQ=104.4
+FREQ=109.585
+#FREQ=145.3
 #Put sound file in tmpfs
 WAVFILE=/run/espeak.tmp
 PRG=`readlink -f "$0"`
 BASEDIR=`dirname "$PRG"`
-WORDS=""$@""
 WPM=140
 PITCH=99
 #LANG=spanish
 LANG=en+m2
+VERSION=0.1
+
+function usage ()
+{
+        cat <<- EOT
+
+  Usage :  ${0##/*/} [-hv] [-f freq] <<words to say>>
+
+  Options: 
+  -h|help            	Display this message
+  -v|version         	Display script version
+  -f|frequency in MHz 	Set output freuency
+  
+	EOT
+}    # ----------  end of function usage  ----------
+
+#-----------------------------------------------------------------------
+#  Check frequency is a number greater than 1.0 and less than 125
+#-----------------------------------------------------------------------
+check_freq()
+{
+   MIN=1.0
+   MAX=125.0
+
+   MINTEST=`echo $FREQ'>='$MIN | bc -l`
+   MAXTEST=`echo $FREQ'<='$MAX | bc -l`
+   if  [ $MINTEST -eq 1 ] &&
+       [ $MAXTEST -eq 1 ]; then
+      return;
+   else
+      echo "Frequency needs to be greater than $MIN and less than $MAX MHz.";
+      exit 1;
+   fi
+}
+
+#-----------------------------------------------------------------------
+#  Handle command line options
+#-----------------------------------------------------------------------
+while getopts "hvf:" opt; do
+   case $opt in
+
+      h|help     )  usage; exit 0   ;;
+
+      v|version  )  echo "${0##/*/}  -- Version $VERSION"; exit 0   ;;
+      f|freq     )  FREQ="$OPTARG"; check_freq ;;
+
+      \? )  echo -e "\n  Option does not exist : $OPTARG\n"
+            usage; exit 1   ;;
+
+   esac    # --- end of case ---
+done
+shift $(($OPTIND-1))
 
 #Receive input text from stdin if the first argument is '-'
 if [ "x$1" = "x-" ]; then 
    OPTS="--stdin"
 fi
 
+WORDS=""$@""
 [ -f "$WAVFILE" ] && sudo rm "$WAVFILE"
 sudo espeak $OPTS -m -v $LANG -p $PITCH -s $WPM -w "$WAVFILE" "$WORDS" 
+echo "Speaking at $FREQ MHz."
 sudo $BASEDIR/pifm "$WAVFILE" $FREQ 
