@@ -27,6 +27,7 @@
 
 #define PI 3.14159265
 
+int verbose = 0;
 int  mem_fd;
 char *gpio_mem, *gpio_map;
 char *spi0_mem, *spi0_map;
@@ -555,7 +556,11 @@ void playWav(char* filename, float samplerate, bool stereo)
 }
 
 void unSetupDMA(){
-    printf("Resetting DMA and clock.\n");
+    if (verbose) {
+        printf("Resetting DMA and clock.\n");
+    }
+
+    //Reset DMA and clock
     struct DMAregs* DMA0 = (struct DMAregs*)&(ACCESS(DMABASE));
     DMA0->CS =1<<31;  // reset dma controller
    
